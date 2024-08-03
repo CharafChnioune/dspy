@@ -21,8 +21,8 @@ Your job is to prepare three modular pieces: (i) any essential task instructions
 
     template = dspy.InputField(format=lambda x: f"```\n\n{x.strip()}\n\n```\n\nLet's now prepare three modular pieces.")
     essential_instructions = dspy.OutputField()
-    input_keys = dspy.OutputField(desc='comma-separated list of valid variable names')
-    output_key = dspy.OutputField(desc='a valid variable name')
+    input_keys = dspy.OutputField(desc='komma-gescheiden lijst van geldige variabelenamen')
+    output_key = dspy.OutputField(desc='een geldige variabelenaam')
 
 
 class ShallowCopyOnly:

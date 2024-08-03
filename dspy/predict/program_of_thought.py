@@ -17,7 +17,7 @@ class ProgramOfThought(Module):
         self.input_fields = signature.input_fields
         self.output_fields = signature.output_fields
 
-        assert len(self.output_fields) == 1, "PoT only supports one output field."
+        assert len(self.output_fields) == 1, "PoT ondersteunt slechts één uitvoerveld."
 
         self.output_field_name = next(iter(self.output_fields))
         inputs_ = ", ".join(
@@ -25,17 +25,17 @@ class ProgramOfThought(Module):
         )
         outputs_ = f"`{self.output_field_name}`"
 
-        assert len(self.output_fields) == 1, "PoT only supports one output field."
+        assert len(self.output_fields) == 1, "PoT ondersteunt slechts één uitvoerveld."
 
         instr = []
         instr.append(
-            f"You will be given {inputs_} and you will respond with {outputs_}.",
+            f"Je krijgt {inputs_} en je reageert met {outputs_}.",
         )
         instr.append(
-            f"Generating executable Python code that programmatically computes the correct {outputs_}.",
+            f"Genereer uitvoerbare Python-code die het correcte {outputs_} programmatiche berekent.",
         )
         instr.append(
-            f"After you're done with the computation, make sure the last line in your code evaluates to the correct value for {outputs_}.",
+            f"Zorg ervoor dat de laatste regel in je code de juiste waarde voor  {outputs_} evalueert nadat je klaar bent met de berekening.",
         )
         instr = "\n".join(instr)
 
@@ -63,35 +63,35 @@ class ProgramOfThought(Module):
             "generate": {
                 "generated_code": dspy.OutputField(
                     prefix="Code:",
-                    desc="python code that answers the question",
+                    desc="python code die de vraag beantwoordt",
                     format=str,
                 ),
             },
             "regenerate": {
                 "previous_code": dspy.InputField(
                     prefix="Previous Code:",
-                    desc="previously-generated python code that errored",
+                    desc="eerder gegenereerde python code die een fout gaf",
                     format=str,
                 ),
                 "error": dspy.InputField(
                     prefix="Error:",
-                    desc="error message from previously-generated python code",
+                    desc="foutmelding van eerder gegenereerde python code",
                 ),
                 "generated_code": dspy.OutputField(
                     prefix="Code:",
-                    desc="python code that answers the question",
+                    desc="python code die de vraag beantwoordt",
                     format=str,
                 ),
             },
             "answer": {
                 "final_generated_code": dspy.InputField(
                     prefix="Code:",
-                    desc="python code that answers the question",
+                    desc="python code die de vraag beantwoordt",
                     format=str,
                 ),
                 "code_output": dspy.InputField(
                     prefix="Code Output:",
-                    desc="output of previously-generated python code",
+                    desc="uitvoer van eerder gegenereerde python code",
                 ),
                 self.output_field_name: self.signature.fields[self.output_field_name],
             },
@@ -109,18 +109,18 @@ class ProgramOfThought(Module):
         mode_outputs = f"`{self.output_field_name}`"
         if mode == "generate":
             instr = [
-                f"You will be given {mode_inputs} and you will respond with {mode_outputs}.",
-                f"Generating executable Python code that programmatically computes the correct {mode_outputs}.",
-                f"After you're done with the computation, make sure the last line in your code evaluates to the correct value for {mode_outputs}.",
+                f"Je krijgt {mode_inputs} en je reageert met {mode_outputs}.",
+                f"Genereer uitvoerbare Python-code die het correcte {mode_outputs} programmatiche berekent.",
+                f"Zorg ervoor dat de laatste regel in je code de juiste waarde voor {mode_outputs} evalueert nadat je klaar bent met de berekening.",
             ]
         elif mode == "regenerate":
             instr = [
-                f"You are given {mode_inputs} due to an error in previous code.",
-                "Your task is to correct the error and provide the new `generated_code`.",
+                f"Je krijgt {mode_inputs} vanwege een fout in de vorige code.",
+                "Je taak is om de fout te corrigeren en de nieuwe `generated_code` te geven.",
             ]
         else:  # mode == 'answer'
             instr = [
-                f"Given the final code {mode_inputs}, provide the final {mode_outputs}.",
+                f"Gegeven de definitieve code {mode_inputs}, geef het definitieve {mode_outputs}.",
             ]
 
         return "\n".join(instr)

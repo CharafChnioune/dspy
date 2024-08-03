@@ -23,7 +23,7 @@ class ReAct(Module):
         self.input_fields = self.signature.input_fields
         self.output_fields = self.signature.output_fields
 
-        assert len(self.output_fields) == 1, "ReAct only supports one output field."
+        assert len(self.output_fields) == 1, "ReAct ondersteunt slechts één uitvoerveld."
 
         inputs_ = ", ".join([f"`{k}`" for k in self.input_fields.keys()])
         outputs_ = ", ".join([f"`{k}`" for k in self.output_fields.keys()])
@@ -34,15 +34,15 @@ class ReAct(Module):
             instr.append(f"{self.signature.instructions}\n")
         
         instr.extend([
-            f"You will be given {inputs_} and you will respond with {outputs_}.\n",
-            "To do this, you will interleave Thought, Action, and Observation steps.\n",
-            "Thought can reason about the current situation, and Action can be the following types:\n",
-        ])
+                    f"Je krijgt {inputs_} en je reageert met {outputs_}.\n",
+                    "Om dit te doen, wissel je Gedachte-, Actie- en Observatiestappen af.\n",
+                    "Gedachte kan redeneren over de huidige situatie, en Actie kan van de volgende types zijn:\n",
+                ])
 
         self.tools["Finish"] = dspy.Example(
             name="Finish",
             input_variable=outputs_.strip("`"),
-            desc=f"returns the final {outputs_} and finishes the task",
+            desc=f"geeft het uiteindelijke {outputs_} terug en beëindigt de taak",
         )
 
         for idx, tool in enumerate(self.tools):
@@ -67,7 +67,7 @@ class ReAct(Module):
 
             signature_dict[f"Thought_{j}"] = IOField(
                 prefix=f"Thought {j}:",
-                desc="next steps to take based on last observation",
+                desc="volgende stappen op basis van de laatste observatie",
             )
 
             tool_list = " or ".join(
@@ -79,13 +79,13 @@ class ReAct(Module):
             )
             signature_dict[f"Action_{j}"] = IOField(
                 prefix=f"Action {j}:",
-                desc=f"always either {tool_list} or, when done, Finish[<answer>], where <answer> is the answer to the question itself.",
+                desc=f"altijd ofwel {tool_list} of, wanneer klaar, Finish[<awnser>], waarbij <awnser> het antwoord op de vraag zelf is.",
             )
 
             if j < iters:
                 signature_dict[f"Observation_{j}"] = IOField(
-                    prefix=f"Observation {j}:",
-                    desc="observations based on action",
+                    prefix=f"Observatie {j}:",
+                    desc="observaties gebaseerd op actie",
                     format=dsp.passages2text,
                 )
 
@@ -106,7 +106,7 @@ class ReAct(Module):
 
         except Exception:
             output[f"Observation_{hop+1}"] = (
-                "Failed to parse action. Bad formatting or incorrect action name."
+                "Mislukt om de actie te parseren. Slechte opmaak of onjuiste actienaam."
             )
             # raise e
 

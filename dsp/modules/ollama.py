@@ -1,11 +1,10 @@
 import datetime
 import hashlib
 from typing import Any, Literal, Optional
-
-import requests
+import aiohttp
+import asyncio
 
 from dsp.modules.lm import LM
-
 
 def post_request_metadata(model_name, prompt):
     """Creates a serialized request object for the Ollama API."""
@@ -14,7 +13,6 @@ def post_request_metadata(model_name, prompt):
     hashlib.sha1().update(id_string.encode("utf-8"))
     id_hash = hashlib.sha1().hexdigest()
     return {"id": f"chatcmpl-{id_hash}", "object": "chat.completion", "created": int(timestamp), "model": model_name}
-
 
 class OllamaLocal(LM):
     """Wrapper around a locally hosted Ollama model (API: https://github.com/jmorganca/ollama/blob/main/docs/modelfile.md#valid-parameters-and-values and https://github.com/jmorganca/ollama/blob/main/docs/api.md#generate-a-completion).
@@ -80,7 +78,7 @@ class OllamaLocal(LM):
         # https://github.com/stanfordnlp/dspy/issues/293
         self._prev_prompt_eval_count = 0
 
-    def basic_request(self, prompt: str, **kwargs):
+    async def basic_request(self, prompt: str, **kwargs):
         raw_kwargs = kwargs
 
         kwargs = {**self.kwargs, **kwargs}
@@ -108,32 +106,32 @@ class OllamaLocal(LM):
 
         urlstr = f"{self.base_url}/api/chat" if self.model_type == "chat" else f"{self.base_url}/api/generate"
         tot_eval_tokens = 0
-        for i in range(kwargs["n"]):
-            response = requests.post(urlstr, json=settings_dict, timeout=self.timeout_s)
+        
+        async with aiohttp.ClientSession() as session:
+            for i in range(kwargs["n"]):
+                async with session.post(urlstr, json=settings_dict, timeout=self.timeout_s) as response:
+                    response_json = await response.json()
 
-            # Check if the request was successful (HTTP status code 200)
-            if response.status_code != 200:
-                # If the request was not successful, print an error message
-                print(f"Error: CODE {response.status_code} - {response.text}")
+                    if response.status != 200:
+                        print(f"Error: CODE {response.status} - {response_json}")
 
-            response_json = response.json()
-
-            text = (
-                response_json.get("message").get("content")
-                if self.model_type == "chat"
-                else response_json.get("response")
-            )
-            request_info["choices"].append(
-                {
-                    "index": i,
-                    "message": {
-                        "role": "assistant",
-                        "content": "".join(text),
-                    },
-                    "finish_reason": "stop",
-                },
-            )
-            tot_eval_tokens += response_json.get("eval_count")
+                    text = (
+                        response_json.get("message").get("content")
+                        if self.model_type == "chat"
+                        else response_json.get("response")
+                    )
+                    request_info["choices"].append(
+                        {
+                            "index": i,
+                            "message": {
+                                "role": "assistant",
+                                "content": "".join(text),
+                            },
+                            "finish_reason": "stop",
+                        },
+                    )
+                    tot_eval_tokens += response_json.get("eval_count")
+                    
         request_info["additional_kwargs"] = {k: v for k, v in response_json.items() if k not in ["response"]}
 
         request_info["usage"] = {
@@ -152,17 +150,17 @@ class OllamaLocal(LM):
 
         return request_info
 
-    def request(self, prompt: str, **kwargs):
+    async def request(self, prompt: str, **kwargs):
         """Wrapper for requesting completions from the Ollama model."""
         if "model_type" in kwargs:
             del kwargs["model_type"]
 
-        return self.basic_request(prompt, **kwargs)
+        return await self.basic_request(prompt, **kwargs)
 
     def _get_choice_text(self, choice: dict[str, Any]) -> str:
         return choice["message"]["content"]
 
-    def __call__(
+    async def __call__(
         self,
         prompt: str,
         only_completed: bool = True,
@@ -183,7 +181,7 @@ class OllamaLocal(LM):
         assert only_completed, "for now"
         assert return_sorted is False, "for now"
 
-        response = self.request(prompt, **kwargs)
+        response = await self.request(prompt, **kwargs)
 
         choices = response["choices"]
 

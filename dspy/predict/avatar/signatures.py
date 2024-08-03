@@ -2,22 +2,22 @@ import dspy
 from dspy.predict.avatar.models import Action
 
 
-class Actor(dspy.Signature):
-    """You will be given `Tools` which will be a list of tools to use to accomplish the `Goal`. Given the user query, your task is to decide which tool to use and what input values to provide.
+class Acteur(dspy.Signature):
+    """Je krijgt `Tools` die een lijst van tools zijn om het `Doel` te bereiken. Gezien de gebruikersquery is het jouw taak om te beslissen welke tool te gebruiken en welke invoerwaarden je aan de tool moet geven.
 
-You will output action needed to accomplish the `Goal`. `Action` should have a tool to use and the input query to pass to the tool.
+Je zult de actie outputten die nodig is om het `Doel` te bereiken. `Actie` moet een tool bevatten om te gebruiken en de invoerquery om aan de tool door te geven.
 
-Note: You can opt to use no tools and provide the final answer directly. You can also one tool multiple times with different input queries if applicable."""
+Opmerking: Je kunt ervoor kiezen om geen tools te gebruiken en direct het eindantwoord te geven. Je kunt ook één tool meerdere keren gebruiken met verschillende invoerqueries indien van toepassing."""
 
-    goal: str = dspy.InputField(
-        prefix="Goal:",
-        desc="Task to be accomplished.",
+    doel: str = dspy.InputField(
+        prefix="Doel:",
+        desc="Taak die moet worden volbracht.",
     )
     tools: list[str] = dspy.InputField(
         prefix="Tools:",
-        desc="list of tools to use",
+        desc="lijst van te gebruiken tools",
     )
-    action_1: Action = dspy.OutputField(
-        prefix="Action 1:",
-        desc="1st action to take.",
+    actie_1: Action = dspy.OutputField(
+        prefix="Actie 1:",
+        desc="Eerste actie die moet worden ondernomen.",
     )

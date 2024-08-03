@@ -25,8 +25,8 @@ class Retry(Predict):
             ))
 
         signature = signature.append("feedback", dspy.InputField(
-            prefix="Instructions:",
-            desc="Some instructions you must satisfy",
+            prefix="Instructies:",
+            desc="Enkele instructies die je moet volgen",
             format=str,
         ))
 

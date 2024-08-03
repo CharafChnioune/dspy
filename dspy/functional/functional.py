@@ -72,8 +72,8 @@ def TypedChainOfThought(signature, instructions=None, reasoning=None, *, max_ret
     output_keys = ", ".join(signature.output_fields.keys())
 
     default_rationale = dspy.OutputField(
-        prefix="Reasoning: Let's think step by step in order to",
-        desc="${produce the " + output_keys + "}. We ...",
+    prefix="Redenering: Laten we stap voor stap nadenken om",
+    desc="${het " + output_keys + " te produceren}. We ...",
     )
     reasoning = reasoning or default_rationale
 
@@ -124,7 +124,7 @@ class TypedPredictor(dspy.Module):
         json_object = dspy.Predict(
             make_signature(
                 "json_schema -> json_object",
-                "Make a very succinct json object that validates with the following schema",
+                "Maak een zeer beknopt JSON-object dat valideert met het volgende schema",
             ),
         )(json_schema=schema).json_object
         # We use the model_validate_json method to make sure the example is valid
@@ -173,17 +173,17 @@ class TypedPredictor(dspy.Module):
 
     def _make_explanation(self, task_description: str, model_output: str, error: str) -> str:
         class Signature(dspy.Signature):
-            """I gave my language model a task, but it failed.
+            """Ik gaf mijn taalmodel een taak, maar het mislukte.
 
-            Figure out what went wrong, and write instructions to help it avoid the error next time.
+            Ontdek wat er misging en schrijf instructies om te helpen de fout de volgende keer te vermijden.
             """
 
-            task_description: str = dspy.InputField(desc="What I asked the model to do")
-            language_model_output: str = dspy.InputField(desc="The output of the model")
-            error: str = dspy.InputField(desc="The validation error trigged by the models output")
-            explanation: str = dspy.OutputField(desc="Explain what the model did wrong")
+            task_description: str = dspy.InputField(desc="Wat ik het model vroeg te doen")
+            language_model_output: str = dspy.InputField(desc="De output van het model")
+            error: str = dspy.InputField(desc="De validatiefout veroorzaakt door de output van het model")
+            explanation: str = dspy.OutputField(desc="Leg uit wat het model verkeerd deed")
             advice: str = dspy.OutputField(
-                desc="Instructions for the model to do better next time. A single paragraph.",
+                desc="Instructies voor het model om het de volgende keer beter te doen. Een enkele alinea.",
             )
 
         # TODO: We could also try repair the output here. For example, if the output is a float, but the
@@ -196,7 +196,7 @@ class TypedPredictor(dspy.Module):
         ).advice
 
     def _prepare_signature(self) -> dspy.Signature:
-        """Add formats and parsers to the signature fields, based on the type annotations of the fields."""
+        """Voeg formats en parsers toe aan de handtekeningvelden, gebaseerd op de typeannotaties van de velden."""
         signature = self.signature
         for name, field in self.signature.fields.items():
             is_output = field.json_schema_extra["__dspy_field_type"] == "output"
@@ -207,13 +207,13 @@ class TypedPredictor(dspy.Module):
                     def parse(x):
                         x = x.strip().lower()
                         if x not in ("true", "false"):
-                            raise ValueError("Respond with true or false")
+                            raise ValueError("Reageer met true of false")
                         return x == "true"
 
                     signature = signature.with_updated_fields(
                         name,
                         desc=field.json_schema_extra.get("desc", "")
-                        + (" (Respond with true or false)" if type_ != str else ""),
+                        + (" (Reageer met true of false)" if type_ != str else ""),
                         format=lambda x: x if isinstance(x, str) else str(x),
                         parser=parse,
                     )
@@ -221,7 +221,7 @@ class TypedPredictor(dspy.Module):
                     signature = signature.with_updated_fields(
                         name,
                         desc=field.json_schema_extra.get("desc", "")
-                        + (f" (Respond with a single {type_.__name__} value)" if type_ != str else ""),
+                        + (f" (Reageer met een enkele {type_.__name__} waarde)" if type_ != str else ""),
                         format=lambda x: x if isinstance(x, str) else str(x),
                         parser=type_,
                     )
@@ -257,7 +257,7 @@ class TypedPredictor(dspy.Module):
                     signature = signature.with_updated_fields(
                         name,
                         desc=field.json_schema_extra.get("desc", "")
-                        + (". Respond with a single JSON object. JSON Schema: " + schema),
+                        + (". Reageer met een enkel JSON-object. JSON-schema: " + schema),
                         format=lambda x, to_json=to_json: (x if isinstance(x, str) else to_json(x)),
                         parser=lambda x, from_json=from_json: from_json(_unwrap_json(x, from_json)),
                         type_=type_,
@@ -317,7 +317,7 @@ class TypedPredictor(dspy.Module):
                         if i == -1:
                             continue  # Only add examples to JSON objects
                         suffix, current_desc = current_desc[i:], current_desc[:i]
-                        prefix = "You MUST use this format: "
+                        prefix = "Je MOET dit formaat gebruiken: "
                         if (
                             try_i + 1 < self.max_retries
                             and prefix not in current_desc
@@ -412,10 +412,10 @@ def _unwrap_json(output, from_json: Callable[[str], Union[pydantic.BaseModel, st
         output = output.strip()
         if output.startswith("```"):
             if not output.startswith("```json"):
-                raise ValueError("json output should start with ```json") from None
+                raise ValueError("json-uitvoer moet beginnen met ```json") from None
             if not output.endswith("```"):
-                raise ValueError("Don't write anything after the final json ```") from None
+                raise ValueError("Schrijf niets na de laatste json ```") from None
             output = output[7:-3].strip()
         if not output.startswith("{") or not output.endswith("}"):
-            raise ValueError("json output should start and end with { and }") from None
+            raise ValueError("json-uitvoer moet beginnen en eindigen met { and }") from None
         return ujson.dumps(ujson.loads(output))  # ujson is a bit more robust than the standard json

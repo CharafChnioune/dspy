@@ -18,15 +18,15 @@ class ChainOfThought(Module):
         self.signature = signature = ensure_signature(signature)
         *_keys, last_key = signature.output_fields.keys()
 
-        prefix = "Reasoning: Let's think step by step in order to"
-        desc = "${produce the " + last_key + "}. We ..."
+        prefix = "Redenering: Laten we stap voor stap nadenken om"
+        desc = "${produceer de " + last_key + "}. We ..."
 
         if dspy.settings.experimental:
             desc = "${produce the output fields}. We ..."
 
         rationale_type = rationale_type or dspy.OutputField(prefix=prefix, desc=desc)
 
-        extended_signature = signature.prepend("rationale", rationale_type, type_=str)
+        extended_signature = signature.prepend("redenering", rationale_type, type_=str)
         self._predict = dspy.Predict(extended_signature, **config)
         self._predict.extended_signature = extended_signature
 

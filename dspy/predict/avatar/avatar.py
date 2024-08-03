@@ -33,8 +33,8 @@ class Avatar(dspy.Module):
 
         self.finish_tool = Tool(
             tool=None,
-            name="Finish",
-            desc="returns the final output and finishes the task",
+            name="Afronden",
+            desc="geeft de uiteindelijke output terug en voltooit de taak",
         )
 
         self.tools = tools + [self.finish_tool]
@@ -71,107 +71,107 @@ class Avatar(dspy.Module):
             raise ValueError(f"Unknown field type: {field_info.json_schema_extra['__dspy_field_type']}")
 
 
-    def _update_signature(self, idx: int, omit_action: bool = False):
-        self.actor.signature = self.actor.signature.with_updated_fields(
-            f"action_{idx}", 
-            Action, 
-            __dspy_field_type="input"
-        )
+def _update_signature(self, idx: int, omit_action: bool = False):
+    self.actor.signature = self.actor.signature.with_updated_fields(
+        f"actie_{idx}", 
+        Action, 
+        __dspy_field_type="input"
+    )
 
-        self.actor.signature = self.actor.signature.append(
-            f"result_{idx}",
-            dspy.InputField(
-                prefix=f"Result {idx}:",
-                desc=f"{get_number_with_suffix(idx)} result",
-                type_=str,
-            )
+    self.actor.signature = self.actor.signature.append(
+        f"resultaat_{idx}",
+        dspy.InputField(
+            prefix=f"Resultaat {idx}:",
+            desc=f"{get_number_with_suffix(idx)} resultaat",
+            type_=str,
         )
-        
-        if omit_action:
-            for field in list(self.output_fields.keys()):
-                self.actor.signature = self.actor.signature.append(
-                    field,
-                    self._get_field(self.output_fields[field]),
-                    type_=self.output_fields[field].annotation,
-                )
-        else:        
+    )
+    
+    if omit_action:
+        for field in list(self.output_fields.keys()):
             self.actor.signature = self.actor.signature.append(
-                f"action_{idx+1}",
-                dspy.OutputField(
-                    prefix=f"Action {idx+1}:",
-                    desc=f"{get_number_with_suffix(idx+1)} action to taken",
-                )
+                field,
+                self._get_field(self.output_fields[field]),
+                type_=self.output_fields[field].annotation,
             )
-            self.actor.signature = self.actor.signature.with_updated_fields(
-                f"action_{idx+1}",
-                Action,
+    else:        
+        self.actor.signature = self.actor.signature.append(
+            f"actie_{idx+1}",
+            dspy.OutputField(
+                prefix=f"Actie {idx+1}:",
+                desc=f"{get_number_with_suffix(idx+1)} te nemen actie",
             )
-
-
-    def _call_tool(self, tool_name: str, tool_input_query: str) -> str:
-        for tool in self.tools:
-            if tool.name == tool_name:
-                return tool.tool.run(tool_input_query)
-
-
-    def forward(self, **kwargs):
-        if self.verbose:
-            print("Starting the task...")
-        
-        args = {
-            "goal" : self.signature.__doc__,
-            "tools" : [tool.name for tool in self.tools],
-        }
-        
-        for key in self.input_fields.keys():
-            if key in kwargs:
-                args[key] = kwargs[key]
-        
-        idx = 1
-        tool_name = None
-        action_results: list[ActionOutput] = []
-        max_iters = None if "max_iters" not in kwargs else kwargs["max_iters"]
-
-        while tool_name != "Finish" and (max_iters > 0 if max_iters else True):
-            actor_output = self.actor(**args)
-            action = getattr(actor_output, f"action_{idx}")
-
-            tool_name = action.tool_name
-            tool_input_query = action.tool_input_query
-
-            if self.verbose:
-                print(f"Action {idx}: {tool_name} ({tool_input_query})")
-
-            if tool_name != "Finish":
-                tool_output = self._call_tool(tool_name, tool_input_query)
-                action_results.append(
-                    ActionOutput(
-                        tool_name=tool_name, 
-                        tool_input_query=tool_input_query, 
-                        tool_output=tool_output
-                    )
-                )
-
-                self._update_signature(idx)
-
-                args[f"action_{idx}"] = action
-                args[f"result_{idx}"] = tool_output
-            else:
-                self._update_signature(idx, omit_action=True)
-
-                args[f"action_{idx}"] = action
-                args[f"result_{idx}"] = "Gathered all information needed to finish the task."
-                break
-
-            idx += 1
-
-            if max_iters:
-                max_iters -= 1
-
-        final_answer = self.actor(**args)
-        self.actor = deepcopy(self.actor_clone)
-
-        return dspy.Prediction(
-            **{key: getattr(final_answer, key) for key in self.output_fields.keys()},
-            actions=action_results,
         )
+        self.actor.signature = self.actor.signature.with_updated_fields(
+            f"actie_{idx+1}",
+            Action,
+        )
+
+
+def _call_tool(self, tool_name: str, tool_input_query: str) -> str:
+    for tool in self.tools:
+        if tool.name == tool_name:
+            return tool.tool.run(tool_input_query)
+
+
+def forward(self, **kwargs):
+    if self.verbose:
+        print("Taak starten...")
+    
+    args = {
+        "doel" : self.signature.__doc__,
+        "tools" : [tool.name for tool in self.tools],
+    }
+    
+    for key in self.input_fields.keys():
+        if key in kwargs:
+            args[key] = kwargs[key]
+    
+    idx = 1
+    tool_name = None
+    actie_resultaten: list[ActionOutput] = []
+    max_iters = None if "max_iters" not in kwargs else kwargs["max_iters"]
+
+    while tool_name != "Afronden" and (max_iters > 0 if max_iters else True):
+        actor_output = self.actor(**args)
+        action = getattr(actor_output, f"actie_{idx}")
+
+        tool_name = action.tool_name
+        tool_input_query = action.tool_input_query
+
+        if self.verbose:
+            print(f"Actie {idx}: {tool_name} ({tool_input_query})")
+
+        if tool_name != "Afronden":
+            tool_output = self._call_tool(tool_name, tool_input_query)
+            actie_resultaten.append(
+                ActionOutput(
+                    tool_name=tool_name, 
+                    tool_input_query=tool_input_query, 
+                    tool_output=tool_output
+                )
+            )
+
+            self._update_signature(idx)
+
+            args[f"actie_{idx}"] = action
+            args[f"resultaat_{idx}"] = tool_output
+        else:
+            self._update_signature(idx, omit_action=True)
+
+            args[f"actie_{idx}"] = action
+            args[f"resultaat_{idx}"] = "Alle informatie verzameld die nodig is om de taak te voltooien."
+            break
+
+        idx += 1
+
+        if max_iters:
+            max_iters -= 1
+
+    final_answer = self.actor(**args)
+    self.actor = deepcopy(self.actor_clone)
+
+    return dspy.Voorspelling(
+        **{key: getattr(final_answer, key) for key in self.output_fields.keys()},
+        acties=actie_resultaten,
+    )

@@ -16,16 +16,16 @@ class MultiChainComparison(Module):
 
         for idx in range(M):
             signature = signature.append(
-                f"reasoning_attempt_{idx+1}",
+                f"reasoning attempt_{idx+1}",
                 dspy.InputField(
-                    prefix=f"Student Attempt #{idx+1}:", desc="${reasoning attempt}",
+                    prefix=f"Studentpoging #{idx+1}:", desc="${reasoning attempt}",
                 ),
             )
 
         signature = signature.prepend(
-            "rationale",
+            "redenering",
             dspy.OutputField(
-                prefix="Accurate Reasoning: Thank you everyone. Let's now holistically",
+                prefix="Nauwkeurige Redenering: Bedankt iedereen. Laten we nu holistisch",
                 desc="${corrected reasoning}",
             ),
         )
@@ -39,10 +39,10 @@ class MultiChainComparison(Module):
             rationale = c.rationale.strip().split("\n")[0].strip()
             answer = c[self.last_key].strip().split("\n")[0].strip()
             attempts.append(
-                f"«I'm trying to {rationale} I'm not sure but my prediction is {answer}»",
+                f"«Ik probeer te{rationale} Ik weet het niet zeker, maar mijn voorspelling is {answer}»",
             )
 
-        assert len(attempts) == self.M, f"The number of attempts ({len(attempts)}) doesn't match the expected number M ({self.M}). Please set the correct value for M when initializing MultiChainComparison."
+        assert len(attempts) == self.M, f"Het aantal pogingen ({len(attempts)}) komt niet overeen met het verwachte aantal M ({self.M}). Stel de juiste waarde voor M in bij het initialiseren van MultiChainVergelijking."
 
         kwargs = {
             **{
